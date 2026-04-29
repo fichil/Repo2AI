@@ -11,6 +11,8 @@ import (
 
 const outputDir = "output"
 
+const maxPackSizeBytes = 10 * 1024 * 1024
+
 func Generate(manifest *scanner.Manifest) error {
 	if manifest == nil {
 		return fmt.Errorf("manifest is nil")
@@ -47,42 +49,38 @@ func Generate(manifest *scanner.Manifest) error {
 }
 
 func writeCategoryPack(rootPath string, category string, files []scanner.FileInfo) error {
-	fileName := fmt.Sprintf("%s_01.md", category)
-	outputPath := filepath.Join(outputDir, fileName)
+	partNumber := 1
 
 	var builder strings.Builder
-
-	builder.WriteString("# Repo2AI Context Pack\n\n")
-	builder.WriteString("Category: ")
-	builder.WriteString(category)
-	builder.WriteString("\n\n")
+	writePackHeader(&builder, category, partNumber)
 
 	for _, file := range files {
-		fullPath := filepath.Join(rootPath, filepath.FromSlash(file.Path))
-
-		content, err := os.ReadFile(fullPath)
+		block, err := buildFileBlock(rootPath, file)
 		if err != nil {
-			return fmt.Errorf("read file failed: %s, error: %w", file.Path, err)
+			return err
 		}
 
-		builder.WriteString("---\n\n")
-		builder.WriteString("## ")
-		builder.WriteString(file.Path)
-		builder.WriteString("\n\n")
+		if builder.Len()+len(block) > maxPackSizeBytes && builder.Len() > 0 {
+			err = writePackFile(category, partNumber, builder.String())
+			if err != nil {
+				return err
+			}
 
-		builder.WriteString("```")
-		builder.WriteString(languageByType(file.Type))
-		builder.WriteString("\n")
-		builder.Write(content)
-		builder.WriteString("\n```\n\n")
+			partNumber++
+			builder.Reset()
+			writePackHeader(&builder, category, partNumber)
+		}
+
+		builder.WriteString(block)
 	}
 
-	err := os.WriteFile(outputPath, []byte(builder.String()), 0644)
-	if err != nil {
-		return err
+	if builder.Len() > 0 {
+		err := writePackFile(category, partNumber, builder.String())
+		if err != nil {
+			return err
+		}
 	}
 
-	fmt.Println("Context pack generated:", filepath.ToSlash(outputPath))
 	return nil
 }
 
@@ -205,4 +203,51 @@ func writeReadingOrder(builder *strings.Builder, index int, category string, fil
 
 	builder.WriteString(fmt.Sprintf("%d. %s_01.md\n", index, category))
 	return index + 1
+}
+
+func writePackHeader(builder *strings.Builder, category string, partNumber int) {
+	builder.WriteString("# Repo2AI Context Pack\n\n")
+	builder.WriteString("Category: ")
+	builder.WriteString(category)
+	builder.WriteString("\n\n")
+	builder.WriteString("Part: ")
+	builder.WriteString(fmt.Sprintf("%02d", partNumber))
+	builder.WriteString("\n\n")
+}
+
+func buildFileBlock(rootPath string, file scanner.FileInfo) (string, error) {
+	fullPath := filepath.Join(rootPath, filepath.FromSlash(file.Path))
+
+	content, err := os.ReadFile(fullPath)
+	if err != nil {
+		return "", fmt.Errorf("read file failed: %s, error: %w", file.Path, err)
+	}
+
+	var builder strings.Builder
+
+	builder.WriteString("---\n\n")
+	builder.WriteString("## ")
+	builder.WriteString(file.Path)
+	builder.WriteString("\n\n")
+
+	builder.WriteString("```")
+	builder.WriteString(languageByType(file.Type))
+	builder.WriteString("\n")
+	builder.Write(content)
+	builder.WriteString("\n```\n\n")
+
+	return builder.String(), nil
+}
+
+func writePackFile(category string, partNumber int, content string) error {
+	fileName := fmt.Sprintf("%s_%02d.md", category, partNumber)
+	outputPath := filepath.Join(outputDir, fileName)
+
+	err := os.WriteFile(outputPath, []byte(content), 0644)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Context pack generated:", filepath.ToSlash(outputPath))
+	return nil
 }
