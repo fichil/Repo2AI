@@ -6,6 +6,8 @@ import (
 
 	"github.com/fichil/Repo2AI/internal/packer"
 	"github.com/fichil/Repo2AI/internal/scanner"
+	"strconv"
+	"strings"
 )
 
 func main() {
@@ -22,6 +24,19 @@ func main() {
 		path := "."
 		if len(os.Args) >= 3 {
 			path = os.Args[2]
+		}
+
+		for i := 3; i < len(os.Args); i++ {
+			arg := strings.ToLower(os.Args[i])
+
+			if strings.HasPrefix(arg, "--max-size=") {
+				sizeText := strings.TrimPrefix(arg, "--max-size=")
+
+				size, err := parseSize(sizeText)
+				if err == nil {
+					packer.SetMaxPackSize(size)
+				}
+			}
 		}
 
 		result, err := scanner.Scan(path)
@@ -48,4 +63,28 @@ func main() {
 		fmt.Println("Unknown command:", command)
 		fmt.Println("Usage: repo2ai scan <path>")
 	}
+}
+
+func parseSize(text string) (int, error) {
+	text = strings.ToLower(strings.TrimSpace(text))
+
+	if strings.HasSuffix(text, "mb") {
+		num := strings.TrimSuffix(text, "mb")
+		n, err := strconv.Atoi(num)
+		if err != nil {
+			return 0, err
+		}
+		return n * 1024 * 1024, nil
+	}
+
+	if strings.HasSuffix(text, "kb") {
+		num := strings.TrimSuffix(text, "kb")
+		n, err := strconv.Atoi(num)
+		if err != nil {
+			return 0, err
+		}
+		return n * 1024, nil
+	}
+
+	return strconv.Atoi(text)
 }

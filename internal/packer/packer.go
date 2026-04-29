@@ -11,7 +11,7 @@ import (
 
 const outputDir = "output"
 
-const maxPackSizeBytes = 10 * 1024 * 1024
+var maxPackSizeBytes = 10 * 1024 * 1024
 
 func Generate(manifest *scanner.Manifest) error {
 	if manifest == nil {
@@ -53,6 +53,7 @@ func writeCategoryPack(rootPath string, category string, files []scanner.FileInf
 
 	var builder strings.Builder
 	writePackHeader(&builder, category, partNumber)
+	headerSize := builder.Len()
 
 	for _, file := range files {
 		block, err := buildFileBlock(rootPath, file)
@@ -60,7 +61,7 @@ func writeCategoryPack(rootPath string, category string, files []scanner.FileInf
 			return err
 		}
 
-		if builder.Len()+len(block) > maxPackSizeBytes && builder.Len() > 0 {
+		if builder.Len() > headerSize && builder.Len()+len(block) > maxPackSizeBytes {
 			err = writePackFile(category, partNumber, builder.String())
 			if err != nil {
 				return err
@@ -69,12 +70,13 @@ func writeCategoryPack(rootPath string, category string, files []scanner.FileInf
 			partNumber++
 			builder.Reset()
 			writePackHeader(&builder, category, partNumber)
+			headerSize = builder.Len()
 		}
 
 		builder.WriteString(block)
 	}
 
-	if builder.Len() > 0 {
+	if builder.Len() > headerSize {
 		err := writePackFile(category, partNumber, builder.String())
 		if err != nil {
 			return err
@@ -250,4 +252,10 @@ func writePackFile(category string, partNumber int, content string) error {
 
 	fmt.Println("Context pack generated:", filepath.ToSlash(outputPath))
 	return nil
+}
+
+func SetMaxPackSize(size int) {
+	if size > 0 {
+		maxPackSizeBytes = size
+	}
 }
