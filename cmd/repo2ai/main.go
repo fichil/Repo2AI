@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fichil/Repo2AI/internal/packer"
 	"github.com/fichil/Repo2AI/internal/scanner"
 )
 
@@ -32,6 +33,12 @@ func main() {
 		err = scanner.WriteManifest(result, "output")
 		if err != nil {
 			fmt.Println("Write manifest failed:", err)
+			os.Exit(1)
+		}
+
+		err = packer.Generate(result)
+		if err != nil {
+			fmt.Println("Generate context pack failed:", err)
 			os.Exit(1)
 		}
 
