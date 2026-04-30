@@ -148,3 +148,7 @@ If this project helps you, give it a star.
 ## License
 
 MIT
+
+## Demo
+
+![Repo2AI Demo](assets/demo.gif)
