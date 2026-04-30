@@ -81,7 +81,7 @@ repo2ai scan ./demo --format=txt
 ### GUI
 
 ```
-repo2ai gui
+repo2ai gui -- planned
 ```
 
 ## Roadmap

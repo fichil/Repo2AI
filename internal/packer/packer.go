@@ -207,7 +207,7 @@ func writeReadingOrder(builder *strings.Builder, index int, category string, fil
 		return index
 	}
 
-	builder.WriteString(fmt.Sprintf("%d. %s_01.md\n", index, category))
+	builder.WriteString(fmt.Sprintf("%d. %s_01.%s\n", index, category, outputFormat))
 	return index + 1
 }
 
