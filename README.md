@@ -21,10 +21,10 @@ Repo2AI solves this by converting repositories into organized AI-ready packs.
 
 - Scan local repositories
 - Split output into 10MB / custom size chunks
-- Generate TXT / Markdown / JSON packs
+- Generate Markdown and TXT context packs
 - Preserve project structure
 - Ignore useless files automatically
-- Java project support first
+- Optimized for Java projects (initial support)
 - CLI mode
 - GUI mode (planned)
 
@@ -39,10 +39,10 @@ Output:
 ```
 output/
 ├── project-summary.md
-├── controllers_01.txt
-├── services_01.txt
-├── entities_01.txt
-├── configs_01.txt
+├── controllers_01.md
+├── services_01.md
+├── entities_01.md
+├── sql_01.md
 └── manifest.json
 ```
 
@@ -74,8 +74,8 @@ go install github.com/fichil/Repo2AI@latest
 
 ```
 repo2ai scan ./demo
-repo2ai scan ./demo --max-size 10mb
-repo2ai scan ./demo --format txt
+repo2ai scan ./demo --max-size=10mb
+repo2ai scan ./demo --format=txt
 ```
 
 ### GUI
@@ -88,10 +88,37 @@ repo2ai gui
 
 ### v0.1
 
-- Java project scan
-- TXT / MD output
-- Chunk splitting
-- Ignore rules
+#### Features
+
+- Scan Java projects
+
+- Generate AI-ready context packs
+
+- Generate project-summary.md
+
+- Generate manifest.json
+
+- Split context packs by max size
+
+- Support Markdown and TXT output
+
+- Clean output before generation
+
+#### Usage
+
+```bash
+repo2ai scan ./examples/demo-java
+repo2ai scan ./examples/demo-java --format=txt
+repo2ai scan ./examples/demo-java --max-size=5mb
+repo2ai scan ./examples/demo-java --format=txt --max-size=5mb
+```
+
+## Supported Parameters
+
+| Parameter  | Description              |
+| ---------- | ------------------------ |
+| --max-size | Max size per output file |
+| --format   | Output format (md / txt) |
 
 ### v0.2
 
