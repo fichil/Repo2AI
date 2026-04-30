@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fichil/Repo2AI/internal/packer"
-	"github.com/fichil/Repo2AI/internal/scanner"
 	"strconv"
 	"strings"
+
+	"github.com/fichil/Repo2AI/internal/packer"
+	"github.com/fichil/Repo2AI/internal/scanner"
 )
 
 func main() {
@@ -36,6 +37,10 @@ func main() {
 				if err == nil {
 					packer.SetMaxPackSize(size)
 				}
+			}
+			if strings.HasPrefix(arg, "--format=") {
+				format := strings.TrimPrefix(arg, "--format=")
+				packer.SetOutputFormat(format)
 			}
 		}
 

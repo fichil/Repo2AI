@@ -11,6 +11,8 @@ import (
 
 const outputDir = "output"
 
+var outputFormat = "md"
+
 var maxPackSizeBytes = 10 * 1024 * 1024
 
 func Generate(manifest *scanner.Manifest) error {
@@ -195,7 +197,9 @@ func writeGeneratedPack(builder *strings.Builder, category string, files []scann
 	}
 	builder.WriteString("- ")
 	builder.WriteString(category)
-	builder.WriteString("_01.md\n")
+	builder.WriteString("_01.")
+	builder.WriteString(outputFormat)
+	builder.WriteString("\n")
 }
 
 func writeReadingOrder(builder *strings.Builder, index int, category string, files []scanner.FileInfo) int {
@@ -242,7 +246,7 @@ func buildFileBlock(rootPath string, file scanner.FileInfo) (string, error) {
 }
 
 func writePackFile(category string, partNumber int, content string) error {
-	fileName := fmt.Sprintf("%s_%02d.md", category, partNumber)
+	fileName := fmt.Sprintf("%s_%02d.%s", category, partNumber, outputFormat)
 	outputPath := filepath.Join(outputDir, fileName)
 
 	err := os.WriteFile(outputPath, []byte(content), 0644)
@@ -267,4 +271,12 @@ func CleanOutput() error {
 	}
 
 	return os.MkdirAll(outputDir, os.ModePerm)
+}
+
+func SetOutputFormat(format string) {
+	format = strings.ToLower(strings.TrimSpace(format))
+
+	if format == "txt" || format == "md" {
+		outputFormat = format
+	}
 }
